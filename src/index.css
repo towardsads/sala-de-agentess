@@ -1,0 +1,129 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html, body, #root {
+  height: 100%;
+}
+body {
+  margin: 0;
+  background: #030617;
+}
+.sala {
+  font-family: "Sora", system-ui, sans-serif;
+  letter-spacing: -.01em;
+}
+.display {
+  font-family: "Unbounded", "Sora", system-ui, sans-serif;
+}
+.sala ::placeholder {
+  color: #5e6698;
+}
+.sala input,
+.sala textarea,
+.sala select {
+  outline: none;
+}
+.sala button:focus-visible,
+.sala input:focus-visible,
+.sala textarea:focus-visible,
+.sala select:focus-visible {
+  outline: 2px solid #6f8bff;
+  outline-offset: 2px;
+}
+.sala select option {
+  background: #131a45;
+  color: #e8ebff;
+}
+.sala:before {
+  content: "";
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  opacity: .23;
+  background-image: radial-gradient(circle at 15% 10%, #ff4d50 0 1px, transparent 1.5px), radial-gradient(circle at 83% 24%, #ffffff 0 1px, transparent 1.5px), radial-gradient(circle at 48% 88%, #ff4d50 0 1px, transparent 1.5px);
+  background-size: 100px 100px, 140px 140px, 180px 180px;
+}
+.sala > * { position: relative; z-index: 1; }
+.command-table { filter: drop-shadow(0 22px 34px rgba(0, 0, 0, .38)); }
+.command-table text { paint-order: stroke; }
+.sala input, .sala textarea, .sala select {
+  transition: border-color .2s, box-shadow .2s, background .2s;
+}
+.sala input:focus, .sala textarea:focus, .sala select:focus {
+  border-color: #ff3b3f !important;
+  box-shadow: 0 0 0 3px rgba(255, 59, 63, .14), 0 0 22px rgba(255, 59, 63, .12);
+}
+@keyframes ambient {
+  0%, 100% { opacity: .45; transform: translateY(0); }
+  50% { opacity: .9; transform: translateY(-5px); }
+}
+.command-table { animation: ambient 5s ease-in-out infinite; }
+@keyframes flutuar {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-7px) rotate(0.25deg); }
+}
+.mesa-floating { animation: flutuar 6.5s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+@keyframes dot {
+  0%, 80%, 100% { opacity: .25; transform: translateY(0); }
+  40% { opacity: 1; transform: translateY(-3px); }
+}
+.dot { animation: dot 1.2s infinite; }
+@keyframes orbita { to { stroke-dashoffset: -200; } }
+.orbita { animation: orbita 9s linear infinite; }
+@keyframes fluxo { to { stroke-dashoffset: -22; } }
+.fluxo { animation: fluxo .9s linear infinite; }
+@keyframes pulso {
+  0% { transform: scale(1); opacity: .8; }
+  100% { transform: scale(1.8); opacity: 0; }
+}
+.pulso { animation: pulso 1.4s ease-out infinite; }
+@keyframes ditando {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+}
+.ditando { animation: ditando 1s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .dot, .orbita, .fluxo, .pulso, .ditando, .command-table, .mesa-floating { animation: none; }
+}
+
+/* --- HUD / Jarvis shell --- */
+@keyframes scan {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100%); }
+}
+.hud-scan {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.hud-scan:after {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; height: 40%;
+  background: linear-gradient(180deg, transparent, rgba(255,59,63,.06), transparent);
+  animation: scan 6s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .hud-scan:after { animation: none; }
+}
+@keyframes pulsarPonto {
+  0%, 100% { opacity: .5; box-shadow: 0 0 0 rgba(255,59,63,.6); }
+  50% { opacity: 1; box-shadow: 0 0 10px rgba(255,59,63,.9); }
+}
+.ponto-vivo { animation: pulsarPonto 1.8s ease-in-out infinite; }
+.kpi-card { transition: transform .18s ease, border-color .18s ease; }
+.kpi-card:hover { transform: translateY(-2px); border-color: #FF3B3F88; }
+.side-item { transition: background .15s ease, border-color .15s ease, color .15s ease; }
+.corner-brackets { position: relative; }
+.corner-brackets:before, .corner-brackets:after {
+  content: "";
+  position: absolute;
+  width: 12px; height: 12px;
+  border: 2px solid #FF3B3F88;
+  opacity: .7;
+}
+.corner-brackets:before { top: -1px; left: -1px; border-right: none; border-bottom: none; }
+.corner-brackets:after { bottom: -1px; right: -1px; border-left: none; border-top: none; }
