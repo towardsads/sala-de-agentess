@@ -4,6 +4,7 @@ const ICONES = {
   painel: "◆",
   clientes: "☰",
   entregas: "▣",
+  cerebro: "✺",
   agencia: "◍",
 };
 
@@ -79,6 +80,7 @@ export default function Sidebar({ view, salaId, aberto, onToggle, onNavigate, cl
         {aberto && <div className="text-[10px] font-bold tracking-widest px-3 pt-3 pb-1" style={{ color: "#6B5052" }}>OPERAÇÃO</div>}
         {!aberto && <div className="my-1 mx-3" style={{ height: 1, background: C.linha }} />}
         <ItemLateral ativo={view === "entregas"} aberto={aberto} icone={ICONES.entregas} label="Entregas" badge={entregasCount} onClick={() => onNavigate("entregas")} />
+        <ItemLateral ativo={view === "cerebro"} aberto={aberto} icone={ICONES.cerebro} label="Cérebro" onClick={() => onNavigate("cerebro")} />
         <ItemLateral ativo={view === "agencia"} aberto={aberto} icone={ICONES.agencia} label="Agência" onClick={() => onNavigate("agencia")} />
       </div>
 

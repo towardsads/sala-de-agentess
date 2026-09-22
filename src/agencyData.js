@@ -317,6 +317,44 @@ ${FIM_VEREDITO}`,
   },
 };
 
+export const SKILLS_SEED = [
+  {
+    id: "jtbd-vpc",
+    nome: "Jobs to be Done + Value Proposition Canvas",
+    descricao: "Diagnostica o que o cliente realmente contrata e amarra a proposta de valor às dores e ganhos dele.",
+    salas: ["estrategia"],
+    conteudo: "Jobs to be Done (JTBD): identifique a tarefa funcional, emocional e social que o cliente está 'contratando' o produto/serviço para resolver — nunca descreva só a categoria do produto.\nValue Proposition Canvas: liste as dores (frustrações, riscos, obstáculos), os ganhos desejados (resultados e benefícios esperados) e mapeie como a oferta cria aliviadores de dor e geradores de ganho específicos para cada um.\nUse isso para evitar proposta de valor genérica — ela precisa nascer da dor/ganho real, não de uma lista de features.",
+  },
+  {
+    id: "aida-pas",
+    nome: "AIDA e PAS",
+    descricao: "Duas estruturas persuasivas de copywriting, para escolher conforme o formato e o objetivo da peça.",
+    salas: ["copy"],
+    conteudo: "AIDA (Atenção, Interesse, Desejo, Ação): melhor para peças mais longas onde há espaço pra construir desejo antes do CTA — página de vendas, e-mail, roteiro de vídeo.\nPAS (Problema, Agitação, Solução): melhor para ganchos diretos e curtos — anúncios, primeira linha de post, headline — nomeia o problema, intensifica a dor, depois resolve.\nEscolha uma estrutura por peça e aplique de forma reconhecível, não apenas cite o nome do framework.",
+  },
+  {
+    id: "hierarquia-visual",
+    nome: "Hierarquia visual 60-30-10",
+    descricao: "Proporção de cor e princípios de ponto focal para peças que precisam ser lidas em segundos.",
+    salas: ["design"],
+    conteudo: "Regra 60-30-10: 60% cor dominante (fundo/base), 30% cor secundária (blocos de apoio), 10% cor de destaque (CTA, elemento que deve saltar aos olhos).\nPonto focal único: a peça deve ter apenas um elemento competindo pela atenção primária — normalmente o headline ou a oferta.\nPercurso de leitura em Z (peças com pouco texto) ou F (peças com mais texto): posicione título, apoio e CTA seguindo esse fluxo natural do olho.",
+  },
+  {
+    id: "cac-funil",
+    nome: "CAC e orçamento por funil",
+    descricao: "Como estimar custo de aquisição e dividir verba de mídia por etapa do funil de forma realista.",
+    salas: ["trafego"],
+    conteudo: "CAC-alvo: divida o ticket médio (ou LTV, quando informado) por uma margem de segurança — o CAC não deve passar de 30-40% do ticket médio pra o negócio ser saudável no curto prazo.\nDivisão por funil: topo (alcance/reconhecimento) costuma receber 50-70% da verba em contas novas ou com pouco histórico; meio (consideração) 20-30%; fundo (conversão/remarketing) 10-20% — ajuste conforme o objetivo e o histórico de dados.\nSempre declare a premissa usada quando o briefing não informar ticket médio ou histórico.",
+  },
+  {
+    id: "swot-okr",
+    nome: "SWOT + OKR",
+    descricao: "Estrutura para decisões estratégicas internas da agência — diagnóstico rápido seguido de metas mensuráveis.",
+    salas: ["dna"],
+    conteudo: "SWOT resumido: liste 1-2 itens reais (não genéricos) por quadrante — Forças, Fraquezas, Oportunidades, Ameaças — específicos à decisão em pauta, não da agência em geral.\nOKR: um Objetivo qualitativo e inspirador + até 3 Key Results quantitativos e verificáveis, com prazo. Um OKR sem número não é um OKR.\nToda recomendação estratégica interna deve amarrar o SWOT ao OKR proposto — a meta precisa responder diretamente à fraqueza ou oportunidade identificada.",
+  },
+];
+
 export const CAMPOS_CLIENTE = [
   { key: "nome", label: "Empresa", ph: "Ex.: Clínica Sorriso", linhas: 1 },
   { key: "segmento", label: "Segmento", ph: "Ex.: odontologia estética em Campinas", linhas: 1 },

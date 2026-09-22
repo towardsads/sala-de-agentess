@@ -1,9 +1,10 @@
 import { useState, useRef, useEffect } from "react";
-import { LIMITE_MATERIAIS, MAX_RODADAS, C, AGENTS, PERFIS_BASE, SALAS, CAMPOS_CLIENTE, briefInicial, juntar, slug } from "./agencyData.js";
+import { LIMITE_MATERIAIS, MAX_RODADAS, C, AGENTS, PERFIS_BASE, SALAS, CAMPOS_CLIENTE, SKILLS_SEED, briefInicial, juntar, slug } from "./agencyData.js";
 import { lsGet, lsSet, callClaude, centralRequest, saveCentralDocument, extrairEntrega, normalizarSvg, limparSvg, svgValido, svgParaPng } from "./helpers.js";
 import { CampoComVoz, Mesa, EntregaCard, Mensagem, Digitando, inputStyle, painelStyle, botaoSec } from "./uiParts.jsx";
 import Sidebar from "./Sidebar.jsx";
 import Painel from "./Painel.jsx";
+import Cerebro from "./Cerebro.jsx";
 
 export default function SalaDeAgentes() {
   const [salaId, setSalaId] = useState("estrategia");
@@ -19,6 +20,7 @@ export default function SalaDeAgentes() {
 
   const [cfg, setCfg] = useState(() => lsGet("sala-config", { agencia: "Towards", tom: "" }));
   const [perfis, setPerfis] = useState(() => lsGet("perfis-agentes", PERFIS_BASE));
+  const [skills, setSkills] = useState(() => lsGet("skills-cerebro", SKILLS_SEED));
   const [agenteEditando, setAgenteEditando] = useState(null);
   const [cfgSalva, setCfgSalva] = useState(false);
   const [salvas, setSalvas] = useState(() => lsGet("entregas-aprovadas", []));
@@ -90,6 +92,7 @@ export default function SalaDeAgentes() {
       setSalvas(data.deliveries || []);
       if (data.agency?.config) setCfg(data.agency.config);
       if (data.agency?.agentProfiles) setPerfis({ ...PERFIS_BASE, ...data.agency.agentProfiles });
+      if (data.agency?.skills) setSkills(data.agency.skills);
       setAutenticado(true);
     } catch (error) {
       if (error.status === 401) setAutenticado(false);
@@ -106,10 +109,11 @@ export default function SalaDeAgentes() {
   }, [msgs, falando, fase, view]);
 
   const persistirClientes = (lista) => lsSet("clientes", lista);
-  const salvarAgenciaCentral = async (config = cfg, agentProfiles = perfis) => {
+  const salvarAgenciaCentral = async (config = cfg, agentProfiles = perfis, skillsAtuais = skills) => {
     lsSet("sala-config", config);
     lsSet("perfis-agentes", agentProfiles);
-    try { await saveCentralDocument("agency", "agency", { config, agentProfiles }); }
+    lsSet("skills-cerebro", skillsAtuais);
+    try { await saveCentralDocument("agency", "agency", { config, agentProfiles, skills: skillsAtuais }); }
     catch (error) { setErroCentral(error.message); }
   };
 
@@ -161,6 +165,12 @@ export default function SalaDeAgentes() {
         const p = perfis[id] || PERFIS_BASE[id];
         return `${AGENTS[id].nome}: Método: ${p.metodo}\nCritérios: ${p.criterios}\nEvitar: ${p.evitar}`;
       }).join("\n\n")}`,
+      (() => {
+        const ativas = skills.filter((sk) => sk.salas.includes(sala.id));
+        return ativas.length
+          ? `CÉREBRO DA EQUIPE (padrões e frameworks ativos nesta sala)\n${ativas.map((sk) => `${sk.nome}: ${sk.conteudo}`).join("\n\n")}`
+          : "";
+      })(),
       baseCliente(),
       referencia(),
       `BRIEFING\n${linhas.join("\n")}`,
@@ -1012,6 +1022,7 @@ Agora é a sua vez de falar.`;
   const conteudoPrincipal = () => {
     if (view === "clientes") return <ClientesView />;
     if (view === "entregas") return <EntregasView />;
+    if (view === "cerebro") return <Cerebro skills={skills} setSkills={setSkills} onSalvar={() => salvarAgenciaCentral(cfg, perfis, skills)} />;
     if (view === "agencia") return <AgenciaView />;
     if (view === "sala") return fase === "briefing" ? conteudoSalaBriefing() : conteudoSalaReuniao();
     return (
