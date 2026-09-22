@@ -26,6 +26,12 @@ export const AGENTS = {
   caio: { nome: "Caio", papel: "Gestor de tráfego", cor: "#FF5A5F", acao: "está montando o plano" },
   gui: { nome: "Gui", papel: "Revisor cético de verba", cor: "#8C7476", acao: "está procurando desperdício" },
   nina: { nome: "Nina", papel: "Head de tráfego", cor: "#C41E3A", acao: "está avaliando o plano" },
+  renato: { nome: "Renato", papel: "CEO", cor: "#FFFFFF", acao: "está decidindo" },
+  marina: { nome: "Marina", papel: "CMO", cor: "#FF5A5F", acao: "está avaliando o posicionamento" },
+  fabio: { nome: "Fábio", papel: "CFO", cor: "#C41E3A", acao: "está analisando os números" },
+  bianca: { nome: "Bianca", papel: "Revisora cética financeira", cor: "#8C7476", acao: "está questionando as premissas" },
+  paula: { nome: "Paula", papel: "Gestora de pessoas", cor: "#FF3B3F", acao: "está avaliando a situação" },
+  igor: { nome: "Igor", papel: "Revisor cético de RH", cor: "#8C7476", acao: "está checando riscos" },
 };
 
 // São arquétipos próprios da agência: editáveis pelo diretor e baseados em
@@ -43,6 +49,9 @@ export const EQUIPES = {
   copy: "Lia (copywriter), Téo (revisor cético) e Helena (head de estratégia e copy)",
   design: "Duda (designer), Nico (revisor cético de marca) e Beto (head de design)",
   trafego: "Caio (gestor de tráfego), Gui (revisor cético de verba) e Nina (head de tráfego)",
+  dna: "Renato (CEO), Helena (head de estratégia e copy), Beto (head de design), Nina (head de tráfego), Marina (CMO) e Fábio (CFO)",
+  rh: "Paula (gestora de pessoas), Igor (revisor cético de RH) e Renato (CEO)",
+  financeiro: "Fábio (CFO), Bianca (revisora cética financeira) e Renato (CEO)",
 };
 
 export const regras = (equipe) => `Você participa de uma reunião no chat interno de uma agência, junto com outros agentes de IA. Escreva em português do Brasil, em primeira pessoa, como numa conversa de equipe: direto, natural e específico. Chame colegas pelo nome quando reagir a eles. Nas falas de chat, seja breve (até 110 palavras) e não use títulos nem listas.
@@ -58,7 +67,7 @@ Você é ${quem}. Reescreva ${oque} considerando o feedback mais recente da conv
 Formato da resposta: até 3 frases para a equipe dizendo o que mudou e o que você não acatou; depois a nova versão completa entre as linhas ===ENTREGA=== e ===FIM===.`;
 
 export const gerentePrompt = (equipe, oque, autor, decisor = "Helena", decisorPapel = "head") => `${regras(equipe)}
-Você é ${decisor}, ${decisorPapel}. Decida se a versão mais recente ${oque} está pronta para ir ao cliente, olhando objetivo de negócio, marca e o que a equipe discutiu. Tenha senso crítico: não aprove por educação nem devolva por perfeccionismo. Se devolver, dê uma direção clara e específica para ${autor}.
+Você é ${decisor}, ${decisorPapel}. Decida se a versão mais recente ${oque} está pronta para seguir em frente, olhando objetivo de negócio e o que a equipe discutiu. Tenha senso crítico: não aprove por educação nem devolva por perfeccionismo. Se devolver, dê uma direção clara e específica para ${autor}.
 Última linha, obrigatoriamente: DECISÃO: APROVADO ou DECISÃO: DEVOLVER`;
 
 export const DIMENSOES = { "Post feed 4:5": [1080, 1350], "Quadrado 1:1": [1080, 1080], "Story 9:16": [1080, 1920], "Banner 1.91:1": [1200, 628] };
@@ -202,6 +211,108 @@ Formato da resposta: uma frase curta para a equipe; depois o plano completo entr
 Você é Gui, revisor cético de verba. Avalie tecnicamente o plano: se a estrutura cabe no orçamento, se as metas são realistas, se o CAC estimado é sustentável frente ao ticket médio, se a divisão por funil faz sentido e se o rastreamento está coberto (pixel, API de conversões, UTMs). Leia também como o dono do negócio que paga a mídia: risco de queimar verba, metas otimistas demais, testes que não geram aprendizado. Cite ajustes concretos. Só peça ajuste se houver problema real.
 ${FIM_VEREDITO}`,
       gerente: gerentePrompt(EQUIPES.trafego, "do plano de tráfego", "o Caio", "Nina", "head de tráfego"),
+    },
+  },
+  dna: {
+    id: "dna",
+    interna: true,
+    aba: "DNA",
+    titulo: "Sala de DNA",
+    subtitulo: "Renato propõe, os heads e a Marina opinam, Fábio revisa com olhar financeiro e Renato decide. A palavra final é sua.",
+    entregaNome: "Decisão estratégica",
+    entregaRotulo: "DA DECISÃO",
+    lider: "renato",
+    rede: ["helena", "beto", "nina", "marina"],
+    revisor: "fabio",
+    gerente: "renato",
+    mesa: ["voce", "renato", "helena", "beto", "nina", "marina", "fabio"],
+    etapas: ["Proposta", "Heads e CMO", "CFO", "CEO", "Você"],
+    campos: [
+      { key: "tema", label: "Questão ou decisão a discutir", ph: "Ex.: devemos criar um serviço de e-commerce em 2026?", obrig: true, linhas: 2 },
+      { key: "contexto", label: "Contexto atual da Towards", ph: "Ex.: 12 clientes ativos, equipe de 8 pessoas, faturamento estável", linhas: 3 },
+      { key: "impacto", label: "O que está em jogo", ph: "Ex.: pode exigir contratar 2 pessoas e mudar posicionamento", linhas: 2 },
+    ],
+    chips: { key: "tipo", label: "Tipo de decisão", valores: ["Expansão", "Novo serviço", "Posicionamento", "Prioridade de investimento", "Revisão de processo"] },
+    detalhes: { label: "Informações extras", ph: "Dados, propostas concorrentes, histórico relevante" },
+    prompts: {
+      criar: `${regras(EQUIPES.dna)}
+Você é Renato, CEO. Redija a proposta de decisão estratégica da Towards sobre o tema trazido pela direção, usando uma análise SWOT resumida (forças, fraquezas, oportunidades, ameaças) e metas no formato OKR (um objetivo + até 3 resultados-chave mensuráveis). Estrutura: diagnóstico da situação atual; SWOT resumido; recomendação com OKR; riscos e como mitigar; próximos passos com responsável e prazo. Até 350 palavras.
+Formato da resposta: uma frase curta para a equipe; depois o documento completo entre as linhas ===ENTREGA=== e ===FIM===.`,
+      revisar: revisarPrompt(EQUIPES.dna, "Renato, CEO", "a proposta de decisão estratégica"),
+      helena: `${regras(EQUIPES.dna)}
+Você é Helena, head de estratégia e copy. Avalie a proposta pelo impacto na entrega de estratégia e copy para os clientes atuais: a equipe consegue absorver isso sem perder qualidade? Aponte no máximo 2 pontos concretos. Se colegas já falaram, reaja em vez de repetir.`,
+      beto: `${regras(EQUIPES.dna)}
+Você é Beto, head de design. Avalie a proposta pelo impacto na capacidade e qualidade de design: exige contratar, treinar ou muda o padrão de entrega? Aponte no máximo 2 pontos concretos. Reaja ao que os colegas disseram.`,
+      nina: `${regras(EQUIPES.dna)}
+Você é Nina, head de tráfego. Avalie a proposta pelo impacto na operação de mídia e tráfego: muda a forma como a equipe gerencia campanhas ou orçamento? Aponte no máximo 2 pontos concretos. Reaja ao que os colegas disseram.`,
+      marina: `${regras(EQUIPES.dna)}
+Você é Marina, CMO. Avalie a proposta pelo posicionamento e imagem da própria Towards no mercado: fortalece ou dilui a marca da agência? Aponte no máximo 2 pontos concretos. Pode discordar dos colegas.`,
+      revisor: `${regras(EQUIPES.dna)}
+Você é Fábio, CFO. Avalie a proposta pelo ângulo financeiro: custo de implementação, impacto no caixa, retorno esperado e prazo de payback. Aponte se os números batem e se falta alguma premissa financeira. Cite ajustes concretos. Só peça ajuste se houver problema real.
+${FIM_VEREDITO}`,
+      gerente: gerentePrompt(EQUIPES.dna, "da decisão estratégica", "o Renato", "Renato", "CEO"),
+    },
+  },
+  rh: {
+    id: "rh",
+    interna: true,
+    aba: "RH",
+    titulo: "Sala de RH",
+    subtitulo: "Paula propõe, Igor revisa com olhar cético e Renato decide. A palavra final é sua.",
+    entregaNome: "Decisão de RH",
+    entregaRotulo: "DA DECISÃO",
+    lider: "paula",
+    rede: [],
+    revisor: "igor",
+    gerente: "renato",
+    mesa: ["voce", "paula", "igor", "renato"],
+    etapas: ["Proposta", "Revisor cético", "Head", "Você"],
+    campos: [
+      { key: "situacao", label: "Situação ou vaga", ph: "Ex.: avaliar desempenho de um redator júnior após 90 dias", obrig: true, linhas: 2 },
+      { key: "historico", label: "Histórico e contexto", ph: "Ex.: 2 feedbacks anteriores, atrasos recorrentes, boa entrega técnica", linhas: 3 },
+    ],
+    chips: { key: "tipo", label: "Tipo de decisão", valores: ["Contratação", "Desligamento", "Promoção", "Plano de desenvolvimento", "Realocação"] },
+    detalhes: { label: "Informações extras", ph: "Avaliações, registros de conversa, histórico de ponto" },
+    prompts: {
+      criar: `${regras(EQUIPES.rh)}
+Você é Paula, gestora de pessoas. Redija a recomendação sobre a situação ou vaga trazida, considerando desempenho, custo, impacto no time e alternativas antes de uma decisão definitiva (treinamento, plano de desenvolvimento, realocação). Estrutura: resumo da situação; análise de desempenho ou necessidade; alternativas consideradas; recomendação final com prazo; comunicação sugerida ao colaborador. Até 300 palavras.
+Formato da resposta: uma frase curta para a equipe; depois o documento completo entre as linhas ===ENTREGA=== e ===FIM===.`,
+      revisar: revisarPrompt(EQUIPES.rh, "Paula, gestora de pessoas", "a recomendação de RH"),
+      revisor: `${regras(EQUIPES.rh)}
+Você é Igor, revisor cético de RH. Avalie se a recomendação é justa, prudente e consistente com decisões anteriores da agência. Aponte riscos trabalhistas, viés ou falta de documentação do processo. Cite ajustes concretos. Só peça ajuste se houver problema real.
+${FIM_VEREDITO}`,
+      gerente: gerentePrompt(EQUIPES.rh, "da decisão de pessoas", "a Paula", "Renato", "CEO"),
+    },
+  },
+  financeiro: {
+    id: "financeiro",
+    interna: true,
+    aba: "Financeiro",
+    titulo: "Sala financeira",
+    subtitulo: "Fábio projeta, Bianca revisa com olhar cético e Renato decide. A palavra final é sua.",
+    entregaNome: "Projeção",
+    entregaRotulo: "DA PROJEÇÃO",
+    lider: "fabio",
+    rede: [],
+    revisor: "bianca",
+    gerente: "renato",
+    mesa: ["voce", "fabio", "bianca", "renato"],
+    etapas: ["Projeção", "Revisor cético", "Head", "Você"],
+    campos: [
+      { key: "tema", label: "O que precisa ser projetado ou decidido", ph: "Ex.: projeção de caixa para os próximos 6 meses", obrig: true, linhas: 2 },
+      { key: "numeros", label: "Números atuais", ph: "Ex.: faturamento mensal, custos fixos, ticket médio por cliente", linhas: 3 },
+    ],
+    chips: { key: "tipo", label: "Tipo de análise", valores: ["Projeção de caixa", "Precificação", "Investimento", "Corte de custos", "Análise de cliente"] },
+    detalhes: { label: "Informações extras", ph: "Planilhas, metas do trimestre, restrições de caixa" },
+    prompts: {
+      criar: `${regras(EQUIPES.financeiro)}
+Você é Fábio, CFO. Redija a análise financeira ou projeção pedida, usando unit economics (CAC, ticket médio, margem) e visão de caixa (burn rate e runway quando fizer sentido). Estrutura: situação financeira atual; projeção com premissas explícitas; cenário conservador e cenário otimista; recomendação; riscos financeiros. Até 320 palavras.
+Formato da resposta: uma frase curta para a equipe; depois o documento completo entre as linhas ===ENTREGA=== e ===FIM===.`,
+      revisar: revisarPrompt(EQUIPES.financeiro, "Fábio, CFO", "a projeção financeira"),
+      revisor: `${regras(EQUIPES.financeiro)}
+Você é Bianca, revisora cética financeira. Questione as premissas da projeção: estão otimistas demais? Falta considerar sazonalidade, inadimplência ou custo oculto? Cite ajustes concretos. Só peça ajuste se houver problema real.
+${FIM_VEREDITO}`,
+      gerente: gerentePrompt(EQUIPES.financeiro, "da projeção financeira", "o Fábio", "Renato", "CEO"),
     },
   },
 };

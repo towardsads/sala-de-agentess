@@ -55,8 +55,8 @@ export default function SalaDeAgentes() {
   const stopRef = useRef(false);
   const fimRef = useRef(null);
 
-  const clienteAtual = clientes.find((c) => c.id === clienteSel) || null;
-  const briefEfetivo = { ...brief, cliente: clienteAtual ? clienteAtual.nome : brief.cliente };
+  const clienteAtual = sala.interna ? null : clientes.find((c) => c.id === clienteSel) || null;
+  const briefEfetivo = sala.interna ? brief : { ...brief, cliente: clienteAtual ? clienteAtual.nome : brief.cliente };
 
   useEffect(() => { lsSet("sala-sidebar", sidebarAberta); }, [sidebarAberta]);
 
@@ -271,6 +271,12 @@ Agora é a sua vez de falar.`;
     addMsg({ agent: sala.lider, texto: intro, entrega, svg: sala.visual ? svg : null, versao: versaoRef.current, alvos: lista });
   };
 
+  const turnoRede = async (id) => {
+    const lista = alvosDe(id);
+    const raw = await falar(id, sala.prompts[id], lista);
+    addMsg({ agent: id, texto: raw.trim(), alvos: lista });
+  };
+
   const turnoRevisor = async () => {
     const lista = alvosDe(sala.revisor);
     const raw = await falar(sala.revisor, sala.prompts.revisor, lista);
@@ -287,24 +293,27 @@ Agora é a sua vez de falar.`;
     const texto = raw.replace(/^.*DECIS[ÃA]O:.*$/im, "").trim();
     addMsg({
       agent: sala.gerente, texto, alvos: lista,
-      selo: ok ? "Liberado para o cliente" : `Devolveu para ${AGENTS[sala.lider].nome}`, seloTipo: ok ? "ok" : "alerta",
+      selo: ok ? "Aprovado" : `Devolveu para ${AGENTS[sala.lider].nome}`, seloTipo: ok ? "ok" : "alerta",
     });
     return ok;
   };
 
   const cicloAprovacao = async () => {
+    const etapaRevisor = sala.rede.length ? 2 : 1;
+    const etapaGerente = sala.rede.length ? 3 : 2;
+    const etapaFinal = sala.rede.length ? 4 : 3;
     let rodadas = 0;
     while (true) {
-      setEtapa(1);
+      setEtapa(etapaRevisor);
       const okRev = await turnoRevisor();
       if (!okRev && rodadas < MAX_RODADAS) { rodadas++; setEtapa(0); await turnoLider("revisar"); continue; }
-      setEtapa(2);
+      setEtapa(etapaGerente);
       const okGer = await turnoGerente();
       if (!okGer && rodadas < MAX_RODADAS) { rodadas++; setEtapa(0); await turnoLider("revisar"); continue; }
       if (!okGer || !okRev) addMsg({ agent: "sistema", texto: `Limite de ${MAX_RODADAS} rodadas de correção atingido. A decisão final fica com você.` });
       break;
     }
-    setEtapa(3);
+    setEtapa(etapaFinal);
     setFase("aprovacao");
   };
 
@@ -330,10 +339,19 @@ Agora é a sua vez de falar.`;
     setMesaAberta(true);
     setFase("rodando");
     const extras = [clienteAtual ? `com a base de ${clienteAtual.nome}` : "", brief.refId ? "usando uma entrega aprovada como base" : ""].filter(Boolean);
-    addMsg({ agent: "sistema", texto: `Reunião aberta: ${brief[sala.chips.key]} para ${briefEfetivo.cliente}${extras.length ? `, ${juntar(extras)}` : ""}` });
+    const abertura = sala.interna
+      ? `Reunião aberta: ${brief[sala.chips.key]}`
+      : `Reunião aberta: ${brief[sala.chips.key]} para ${briefEfetivo.cliente}${extras.length ? `, ${juntar(extras)}` : ""}`;
+    addMsg({ agent: "sistema", texto: abertura });
     try {
       setEtapa(0);
       await turnoLider("criar");
+      if (sala.rede.length) {
+        setEtapa(1);
+        for (const id of sala.rede) await turnoRede(id);
+        setEtapa(0);
+        await turnoLider("revisar");
+      }
       await cicloAprovacao();
     } catch (e) {
       tratarErro(e);
@@ -372,7 +390,9 @@ Agora é a sua vez de falar.`;
   const aprovar = () => {
     const item = {
       id: Date.now(), tipo: sala.id, data: new Date().toLocaleDateString("pt-BR"),
-      cliente: briefEfetivo.cliente, clienteId: clienteSel || null, rotulo: brief[sala.chips.key],
+      cliente: sala.interna ? (cfg.agencia || "Towards") : briefEfetivo.cliente,
+      clienteId: sala.interna ? null : (clienteSel || null),
+      rotulo: brief[sala.chips.key],
       texto: entregaRef.current, svg: sala.visual ? svgRef.current : null,
     };
     const novas = [item, ...salvas].slice(0, 80);
@@ -380,7 +400,7 @@ Agora é a sua vez de falar.`;
     setUltimaAprovada(item.id);
     lsSet("entregas-aprovadas", novas);
     saveCentralDocument(item.id, "delivery", item).catch((error) => setErroCentral(error.message));
-    addMsg({ agent: "voce", texto: "Aprovado. Pode seguir para o cliente.", alvos: [sala.gerente] });
+    addMsg({ agent: "voce", texto: "Aprovado.", alvos: [sala.gerente] });
     addMsg({ agent: "sistema", texto: "Entrega aprovada e salva em Entregas aprovadas." });
     setFase("finalizado");
   };
@@ -486,8 +506,8 @@ Agora é a sua vez de falar.`;
 
   const podeIniciar = sala.campos.filter((c) => c.obrig).every((c) => (briefEfetivo[c.key] || "").trim());
   const nConexoes = Object.keys(arestas).length;
-  const arquivoBase = `${slug(briefEfetivo.cliente)}-${sala.id}`;
-  const opcoesRef = salvas.filter((s) => !clienteSel || s.clienteId === clienteSel);
+  const arquivoBase = sala.interna ? `${slug(brief.tema || sala.id)}-${sala.id}` : `${slug(briefEfetivo.cliente)}-${sala.id}`;
+  const opcoesRef = sala.interna ? [] : salvas.filter((s) => !clienteSel || s.clienteId === clienteSel);
 
   const fundo = {
     background: C.bg,
@@ -638,48 +658,50 @@ Agora é a sua vez de falar.`;
       <h1 className="display font-bold" style={{ fontSize: 28, lineHeight: 1.08, letterSpacing: "-0.01em" }}>{sala.titulo}</h1>
       <p className="mt-3 text-sm" style={{ color: C.mudo, lineHeight: 1.6 }}>{sala.subtitulo}</p>
 
-      <div className="rounded-3xl p-5 mb-4 mt-6" style={painelStyle}>
-        <div className="flex justify-between items-center mb-3">
-          <h2 className="display font-bold text-base">Cliente</h2>
-          <button onClick={onNovoCliente} className="rounded-full px-3 py-1.5 text-xs font-semibold" style={botaoSec}>
-            Novo cliente
-          </button>
-        </div>
-        {clientes.length === 0 ? (
-          <p className="text-sm" style={{ color: C.mudo, lineHeight: 1.6 }}>
-            Cadastre um cliente para a equipe trabalhar com as informações reais da empresa: produtos, público, marca, concorrentes e materiais.
-          </p>
-        ) : (
-          <>
-            <div className="flex gap-2">
-              <select className="flex-1 min-w-0 rounded-xl px-3 py-2 text-sm" style={inputStyle} value={clienteSel} onChange={(e) => setClienteSel(e.target.value)}>
-                <option value="">Sem cliente cadastrado</option>
-                {clientes.map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
-              </select>
+      {!sala.interna && (
+        <div className="rounded-3xl p-5 mb-4 mt-6" style={painelStyle}>
+          <div className="flex justify-between items-center mb-3">
+            <h2 className="display font-bold text-base">Cliente</h2>
+            <button onClick={onNovoCliente} className="rounded-full px-3 py-1.5 text-xs font-semibold" style={botaoSec}>
+              Novo cliente
+            </button>
+          </div>
+          {clientes.length === 0 ? (
+            <p className="text-sm" style={{ color: C.mudo, lineHeight: 1.6 }}>
+              Cadastre um cliente para a equipe trabalhar com as informações reais da empresa: produtos, público, marca, concorrentes e materiais.
+            </p>
+          ) : (
+            <>
+              <div className="flex gap-2">
+                <select className="flex-1 min-w-0 rounded-xl px-3 py-2 text-sm" style={inputStyle} value={clienteSel} onChange={(e) => setClienteSel(e.target.value)}>
+                  <option value="">Sem cliente cadastrado</option>
+                  {clientes.map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
+                </select>
+                {clienteAtual && (
+                  <button onClick={() => setEditando({ ...clienteAtual })} className="rounded-xl px-3 py-2 text-xs font-semibold flex-shrink-0" style={botaoSec}>
+                    Editar
+                  </button>
+                )}
+              </div>
               {clienteAtual && (
-                <button onClick={() => setEditando({ ...clienteAtual })} className="rounded-xl px-3 py-2 text-xs font-semibold flex-shrink-0" style={botaoSec}>
-                  Editar
-                </button>
+                <>
+                  <p className="text-xs mt-2" style={{ color: C.mudo }}>
+                    A equipe vai ler {CAMPOS_CLIENTE.filter((f) => (clienteAtual[f.key] || "").trim()).length} campos da base e {(clienteAtual.aprendizados || []).length} aprendizados de {clienteAtual.nome}. Objetivo, prazo/verba e público já vêm preenchidos em todas as salas.
+                  </p>
+                  <div className="grid grid-cols-4 gap-2 mt-3">
+                    {Object.values(SALAS).filter((s) => !s.interna).map((s) => (
+                      <button key={s.id} onClick={() => { setSalaId(s.id); setFase("briefing"); }} className="rounded-xl py-2 text-xs font-semibold"
+                        style={salaId === s.id ? { background: C.brilho, color: "#fff" } : botaoSec}>
+                        {s.aba}
+                      </button>
+                    ))}
+                  </div>
+                </>
               )}
-            </div>
-            {clienteAtual && (
-              <>
-                <p className="text-xs mt-2" style={{ color: C.mudo }}>
-                  A equipe vai ler {CAMPOS_CLIENTE.filter((f) => (clienteAtual[f.key] || "").trim()).length} campos da base e {(clienteAtual.aprendizados || []).length} aprendizados de {clienteAtual.nome}. Objetivo, prazo/verba e público já vêm preenchidos em todas as salas.
-                </p>
-                <div className="grid grid-cols-4 gap-2 mt-3">
-                  {Object.values(SALAS).map((s) => (
-                    <button key={s.id} onClick={() => { setSalaId(s.id); setFase("briefing"); }} className="rounded-xl py-2 text-xs font-semibold"
-                      style={salaId === s.id ? { background: C.brilho, color: "#fff" } : botaoSec}>
-                      {s.aba}
-                    </button>
-                  ))}
-                </div>
-              </>
-            )}
-          </>
-        )}
-      </div>
+            </>
+          )}
+        </div>
+      )}
 
       <div className="rounded-3xl p-5" style={painelStyle}>
         <h2 className="display font-bold text-base mb-4">Briefing</h2>
@@ -850,12 +872,12 @@ Agora é a sua vez de falar.`;
             </div>
           )}
 
-          {fase === "finalizado" && ultimaAprovada && (
+          {fase === "finalizado" && ultimaAprovada && !sala.interna && (
             <div className="mt-6 rounded-3xl p-5" style={painelStyle}>
               <h2 className="display font-bold text-sm">Levar para outra sala</h2>
               <p className="text-xs mt-1 mb-3" style={{ color: C.mudo }}>A próxima equipe recebe esta entrega como base do trabalho.</p>
               <div className="grid grid-cols-3 gap-2">
-                {Object.values(SALAS).filter((s) => s.id !== sala.id).map((s) => (
+                {Object.values(SALAS).filter((s) => s.id !== sala.id && !s.interna).map((s) => (
                   <button key={s.id} onClick={() => levarPara(s.id)} className="rounded-2xl py-3 text-xs font-semibold" style={botaoSec}>
                     {s.aba}
                   </button>

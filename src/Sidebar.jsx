@@ -7,7 +7,7 @@ const ICONES = {
   agencia: "◍",
 };
 
-const SALA_ICONES = { estrategia: "◎", copy: "✎", design: "▧", trafego: "▲" };
+const SALA_ICONES = { estrategia: "◎", copy: "✎", design: "▧", trafego: "▲", dna: "⬡", rh: "◇", financeiro: "▤" };
 
 function ItemLateral({ ativo, aberto, icone, label, badge, onClick }) {
   return (
@@ -66,7 +66,13 @@ export default function Sidebar({ view, salaId, aberto, onToggle, onNavigate, cl
 
         {aberto && <div className="text-[10px] font-bold tracking-widest px-3 pt-3 pb-1" style={{ color: "#6B5052" }}>SALAS</div>}
         {!aberto && <div className="my-1 mx-3" style={{ height: 1, background: C.linha }} />}
-        {Object.values(SALAS).map((s) => (
+        {Object.values(SALAS).filter((s) => !s.interna).map((s) => (
+          <ItemLateral key={s.id} ativo={view === "sala" && salaId === s.id} aberto={aberto} icone={SALA_ICONES[s.id]} label={s.aba} onClick={() => onNavigate("sala", s.id)} />
+        ))}
+
+        {aberto && <div className="text-[10px] font-bold tracking-widest px-3 pt-3 pb-1" style={{ color: "#6B5052" }}>GESTÃO</div>}
+        {!aberto && <div className="my-1 mx-3" style={{ height: 1, background: C.linha }} />}
+        {Object.values(SALAS).filter((s) => s.interna).map((s) => (
           <ItemLateral key={s.id} ativo={view === "sala" && salaId === s.id} aberto={aberto} icone={SALA_ICONES[s.id]} label={s.aba} onClick={() => onNavigate("sala", s.id)} />
         ))}
 
