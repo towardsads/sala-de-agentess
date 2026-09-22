@@ -1,10 +1,9 @@
 import { useState, useRef, useEffect } from "react";
-import { LIMITE_MATERIAIS, MAX_RODADAS, C, AGENTS, PERFIS_BASE, SALAS, CAMPOS_CLIENTE, PIPELINE_SEED, briefInicial, juntar, slug } from "./agencyData.js";
+import { LIMITE_MATERIAIS, MAX_RODADAS, C, AGENTS, PERFIS_BASE, SALAS, CAMPOS_CLIENTE, briefInicial, juntar, slug } from "./agencyData.js";
 import { lsGet, lsSet, callClaude, centralRequest, saveCentralDocument, extrairEntrega, normalizarSvg, limparSvg, svgValido, svgParaPng } from "./helpers.js";
 import { CampoComVoz, Mesa, EntregaCard, Mensagem, Digitando, inputStyle, painelStyle, botaoSec } from "./uiParts.jsx";
 import Sidebar from "./Sidebar.jsx";
 import Painel from "./Painel.jsx";
-import Atendimento from "./Atendimento.jsx";
 
 export default function SalaDeAgentes() {
   const [salaId, setSalaId] = useState("estrategia");
@@ -18,7 +17,7 @@ export default function SalaDeAgentes() {
   const brief = briefs[salaId];
   const setCampo = (k, v) => setBriefs((b) => ({ ...b, [salaId]: { ...b[salaId], [k]: v } }));
 
-  const [cfg, setCfg] = useState(() => lsGet("sala-config", { agencia: "", tom: "" }));
+  const [cfg, setCfg] = useState(() => lsGet("sala-config", { agencia: "Towards", tom: "" }));
   const [perfis, setPerfis] = useState(() => lsGet("perfis-agentes", PERFIS_BASE));
   const [agenteEditando, setAgenteEditando] = useState(null);
   const [cfgSalva, setCfgSalva] = useState(false);
@@ -36,7 +35,6 @@ export default function SalaDeAgentes() {
 
   const [view, setView] = useState("painel");
   const [sidebarAberta, setSidebarAberta] = useState(() => lsGet("sala-sidebar", true));
-  const [pipeline, setPipeline] = useState(() => lsGet("atendimento-pipeline", PIPELINE_SEED));
   const [filtroEntregas, setFiltroEntregas] = useState("todas");
 
   const [msgs, setMsgs] = useState([]);
@@ -61,7 +59,6 @@ export default function SalaDeAgentes() {
   const briefEfetivo = { ...brief, cliente: clienteAtual ? clienteAtual.nome : brief.cliente };
 
   useEffect(() => { lsSet("sala-sidebar", sidebarAberta); }, [sidebarAberta]);
-  useEffect(() => { lsSet("atendimento-pipeline", pipeline); }, [pipeline]);
 
   useEffect(() => {
     if (!clienteAtual) return;
@@ -274,14 +271,6 @@ Agora é a sua vez de falar.`;
     addMsg({ agent: sala.lider, texto: intro, entrega, svg: sala.visual ? svg : null, versao: versaoRef.current, alvos: lista });
   };
 
-  const turnoRede = async (id) => {
-    const lista = alvosDe(id);
-    const raw = await falar(id, sala.prompts[id], lista);
-    const nota = raw.match(/Nota:\s*(\d+(?:[.,]\d)?)\s*\/\s*10/i);
-    const texto = raw.replace(/^.*Nota:\s*\d+(?:[.,]\d)?\s*\/\s*10.*$/im, "").trim();
-    addMsg({ agent: id, texto, selo: nota ? `Nota ${nota[1]}/10` : null, seloTipo: "nota", alvos: lista });
-  };
-
   const turnoRevisor = async () => {
     const lista = alvosDe(sala.revisor);
     const raw = await falar(sala.revisor, sala.prompts.revisor, lista);
@@ -306,16 +295,16 @@ Agora é a sua vez de falar.`;
   const cicloAprovacao = async () => {
     let rodadas = 0;
     while (true) {
-      setEtapa(2);
+      setEtapa(1);
       const okRev = await turnoRevisor();
       if (!okRev && rodadas < MAX_RODADAS) { rodadas++; setEtapa(0); await turnoLider("revisar"); continue; }
-      setEtapa(3);
+      setEtapa(2);
       const okGer = await turnoGerente();
       if (!okGer && rodadas < MAX_RODADAS) { rodadas++; setEtapa(0); await turnoLider("revisar"); continue; }
       if (!okGer || !okRev) addMsg({ agent: "sistema", texto: `Limite de ${MAX_RODADAS} rodadas de correção atingido. A decisão final fica com você.` });
       break;
     }
-    setEtapa(4);
+    setEtapa(3);
     setFase("aprovacao");
   };
 
@@ -345,10 +334,6 @@ Agora é a sua vez de falar.`;
     try {
       setEtapa(0);
       await turnoLider("criar");
-      setEtapa(1);
-      for (const id of sala.rede) await turnoRede(id);
-      setEtapa(0);
-      await turnoLider("revisar");
       await cicloAprovacao();
     } catch (e) {
       tratarErro(e);
@@ -497,10 +482,6 @@ Agora é a sua vez de falar.`;
 
   const onNovoCliente = () => {
     setEditando({ id: "c" + Date.now(), aprendizados: [] });
-  };
-
-  const onConverterCliente = (lead) => {
-    setEditando({ id: "c" + Date.now(), nome: lead.nome, segmento: lead.segmento, aprendizados: [`Vindo do atendimento comercial: ${lead.segmento}, verba estimada de ${lead.valor}/mês.`] });
   };
 
   const podeIniciar = sala.campos.filter((c) => c.obrig).every((c) => (briefEfetivo[c.key] || "").trim());
@@ -1009,14 +990,13 @@ Agora é a sua vez de falar.`;
   const conteudoPrincipal = () => {
     if (view === "clientes") return <ClientesView />;
     if (view === "entregas") return <EntregasView />;
-    if (view === "atendimento") return <Atendimento pipeline={pipeline} setPipeline={setPipeline} onConverterCliente={onConverterCliente} />;
     if (view === "agencia") return <AgenciaView />;
     if (view === "sala") return fase === "briefing" ? conteudoSalaBriefing() : conteudoSalaReuniao();
     return (
       <Painel
         clientes={clientes}
         salvas={salvas}
-        pipeline={pipeline}
+        cfg={cfg}
         onNavigate={setView}
         onNovoCliente={onNovoCliente}
         onNovaReuniao={(sid) => navegar("sala", sid)}
@@ -1034,7 +1014,6 @@ Agora é a sua vez de falar.`;
         onNavigate={navegar}
         clientesCount={clientes.length}
         entregasCount={salvas.length}
-        pipelineCount={pipeline.filter((p) => p.etapa !== "fechado").length}
       />
       <main className="flex-1 min-w-0">{conteudoPrincipal()}</main>
     </div>

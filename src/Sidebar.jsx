@@ -4,7 +4,6 @@ const ICONES = {
   painel: "◆",
   clientes: "☰",
   entregas: "▣",
-  atendimento: "◈",
   agencia: "◍",
 };
 
@@ -35,7 +34,7 @@ function ItemLateral({ ativo, aberto, icone, label, badge, onClick }) {
   );
 }
 
-export default function Sidebar({ view, salaId, aberto, onToggle, onNavigate, clientesCount, entregasCount, pipelineCount }) {
+export default function Sidebar({ view, salaId, aberto, onToggle, onNavigate, clientesCount, entregasCount }) {
   return (
     <div
       className="flex flex-col flex-shrink-0"
@@ -74,7 +73,6 @@ export default function Sidebar({ view, salaId, aberto, onToggle, onNavigate, cl
         {aberto && <div className="text-[10px] font-bold tracking-widest px-3 pt-3 pb-1" style={{ color: "#6B5052" }}>OPERAÇÃO</div>}
         {!aberto && <div className="my-1 mx-3" style={{ height: 1, background: C.linha }} />}
         <ItemLateral ativo={view === "entregas"} aberto={aberto} icone={ICONES.entregas} label="Entregas" badge={entregasCount} onClick={() => onNavigate("entregas")} />
-        <ItemLateral ativo={view === "atendimento"} aberto={aberto} icone={ICONES.atendimento} label="Atendimento" badge={pipelineCount} onClick={() => onNavigate("atendimento")} />
         <ItemLateral ativo={view === "agencia"} aberto={aberto} icone={ICONES.agencia} label="Agência" onClick={() => onNavigate("agencia")} />
       </div>
 

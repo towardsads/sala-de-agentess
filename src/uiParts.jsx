@@ -84,10 +84,13 @@ export function CampoComVoz({ linhas, value, onChange, placeholder, className, s
   );
 }
 
-export function Mesa({ sala, falando = null, alvos = [], arestas = {}, online = [], centro = "", sub = "", compacto = false }) {
-  const W = 560, H = 355, cx = 280, cy = 173, srx = 225, sry = 125, trx = 158, try_ = 75;
+export function Mesa({ sala, falando = null, alvos = [], arestas = {}, online = [], centro = "", sub = "" }) {
   const ids = sala.mesa;
   const n = ids.length;
+  const escala = n > 7 ? 1 + (n - 7) * 0.09 : 1;
+  const W = 560 * escala, H = 355 * escala, cx = W / 2, cy = H / 2, srx = 225 * escala, sry = 125 * escala, trx = 158 * escala, try_ = 75 * escala;
+  const fonteRotulo = n > 12 ? 8.5 : 9.5;
+  const larguraRotulo = n > 12 ? 62 : 72;
   const pos = {};
   ids.forEach((id, i) => {
     const a = Math.PI / 2 + (i * 2 * Math.PI) / n;
@@ -176,7 +179,7 @@ export function Mesa({ sala, falando = null, alvos = [], arestas = {}, online = 
         const ativo = falando === id;
         const apagado = envolvidos && !envolvidos.includes(id);
         const acima = p.y < cy;
-        const labelY = acima ? p.y - 42 : p.y + 45;
+        const labelY = acima ? p.y - 42 * escala : p.y + 45 * escala;
         return (
           <g key={id} style={{ opacity: apagado ? 0.35 : on || ativo ? 1 : 0.6, transition: "opacity .3s" }}>
             {ativo && (
@@ -188,13 +191,10 @@ export function Mesa({ sala, falando = null, alvos = [], arestas = {}, online = 
             <circle cx={p.x} cy={p.y - 10} r="12" fill="#1A0E10" stroke={a.cor} strokeWidth={ativo ? "2.4" : "1.5"} filter={ativo ? "url(#brilhoLinha)" : undefined} />
             <path d={`M${p.x - 9} ${p.y - 14} Q${p.x} ${p.y - 22} ${p.x + 9} ${p.y - 14}`} fill={a.cor} fillOpacity=".35" />
             <text x={p.x} y={p.y - 6.5} textAnchor="middle" className="display" fontSize="8" fontWeight="700" fill={a.cor}>{a.nome[0]}</text>
-            {!compacto && (
-              <g transform={`translate(${p.x - 36}, ${labelY - 10})`}>
-                <rect width="72" height="19" rx="9.5" fill="#0B0607" stroke={ativo ? a.cor : "#3A2124"} strokeOpacity=".8"/>
-                <text x="36" y="12.5" textAnchor="middle" fontSize="9.5" fontWeight="600" fill={ativo ? a.cor : C.texto}>{a.nome}</text>
-              </g>
-            )}
-            {compacto && <title>{a.nome} — {a.papel}</title>}
+            <g transform={`translate(${p.x - larguraRotulo / 2}, ${labelY - 10})`}>
+              <rect width={larguraRotulo} height="19" rx="9.5" fill="#0B0607" stroke={ativo ? a.cor : "#3A2124"} strokeOpacity=".8"/>
+              <text x={larguraRotulo / 2} y="12.5" textAnchor="middle" fontSize={fonteRotulo} fontWeight="600" fill={ativo ? a.cor : C.texto}>{a.nome}</text>
+            </g>
           </g>
         );
       })}
