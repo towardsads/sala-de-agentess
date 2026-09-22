@@ -1,8 +1,8 @@
+import { lazy, Suspense } from "react";
 import { C, AGENTS, SALAS } from "./agencyData.js";
-import { Mesa } from "./uiParts.jsx";
 import { botaoSec, painelStyle } from "./uiParts.jsx";
 
-const SALA_GLOBAL = { mesa: Object.keys(AGENTS) };
+const EscritorioVirtual = lazy(() => import("./EscritorioVirtual.jsx"));
 
 function Kpi({ label, valor, nota }) {
   return (
@@ -44,12 +44,17 @@ export default function Painel({ clientes, salvas, cfg, onNavigate, onNovoClient
       <div className="rounded-3xl overflow-hidden mb-6" style={{ background: "linear-gradient(160deg, #1C0D0F, #060304)", border: `1px solid ${C.linha}`, boxShadow: "0 24px 60px rgba(0,0,0,.4)" }}>
         <div className="hud-scan" />
         <div className="flex items-center justify-between px-4 pt-4 relative">
-          <span className="text-xs font-semibold tracking-widest" style={{ color: "#FF9A9C" }}>REDE DE AGENTES</span>
+          <span className="text-xs font-semibold tracking-widest" style={{ color: "#FF9A9C" }}>{(cfg?.agencia || "AGÊNCIA").toUpperCase()} · VISTA SUPERIOR</span>
           <span className="flex items-center gap-1.5 text-xs font-semibold" style={{ color: "#FFFFFF" }}>
             <i className="ponto-vivo inline-block rounded-full" style={{ width: 7, height: 7, background: "#FF3B3F" }} /> {totalAgentes + 1} NÓS ONLINE
           </span>
         </div>
-        <Mesa sala={SALA_GLOBAL} online={Object.keys(AGENTS)} centro={(cfg?.agencia || "Agência").toUpperCase()} sub={`${totalAgentes} especialistas + você`} />
+        <div style={{ height: 300, padding: "10px 16px 16px" }}>
+          <Suspense fallback={<div style={{ height: "100%" }} />}>
+            <EscritorioVirtual />
+          </Suspense>
+        </div>
+        <div className="text-center text-xs pb-3" style={{ color: "#6B5052" }}>{totalAgentes} especialistas em 7 salas + você</div>
       </div>
 
       <div className="rounded-3xl p-5" style={painelStyle}>
