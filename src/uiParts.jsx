@@ -284,18 +284,19 @@ export function EntregaCard({ rotulo, texto, svg, destaque, arquivo = "entrega" 
   );
 }
 
-export function Mensagem({ m, entregaNome, arquivo }) {
+export function Mensagem({ m, entregaNome, arquivo, indice }) {
   if (m.agent === "sistema") {
     return <div className="text-center text-xs my-5 px-6" style={{ color: C.mudo }}>{m.texto}</div>;
   }
   const a = AGENTS[m.agent];
   const voce = m.agent === "voce";
+  const direita = voce || (indice != null && indice % 2 === 1);
   const para = (m.alvos || []).filter((x) => x !== m.agent).map((x) => AGENTS[x].nome);
   return (
-    <div className={`flex gap-2 my-4 ${voce ? "flex-row-reverse" : ""}`}>
+    <div className={`flex gap-2 my-4 ${direita ? "flex-row-reverse" : ""}`}>
       <AvatarChat id={m.agent} />
       <div className="min-w-0" style={{ maxWidth: "86%" }}>
-        <div className={`flex items-baseline gap-x-2 mb-1 flex-wrap ${voce ? "justify-end" : ""}`}>
+        <div className={`flex items-baseline gap-x-2 mb-1 flex-wrap ${direita ? "justify-end" : ""}`}>
           <span className="text-sm font-semibold" style={{ color: a.cor }}>{a.nome}</span>
           <span className="text-xs" style={{ color: C.mudo }}>{para.length ? `para ${juntar(para)}` : a.papel}</span>
         </div>
@@ -304,7 +305,7 @@ export function Mensagem({ m, entregaNome, arquivo }) {
             style={{
               background: voce ? "#FFFFFF" : a.cor + "1C", color: voce ? C.bg : C.texto,
               border: voce ? "none" : `1px solid ${a.cor}44`,
-              borderRadius: 16, borderTopLeftRadius: voce ? 16 : 4, borderTopRightRadius: voce ? 4 : 16,
+              borderRadius: 16, borderTopLeftRadius: direita ? 16 : 4, borderTopRightRadius: direita ? 4 : 16,
               whiteSpace: "pre-wrap", lineHeight: 1.55,
             }}>
             {m.texto}

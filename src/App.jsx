@@ -838,7 +838,13 @@ Agora é a sua vez de falar.`;
         </div>
 
         <div className="max-w-xl mx-auto px-4 pb-10" role="log" aria-live="polite">
-          {msgs.map((m) => <Mensagem key={m.id} m={m} entregaNome={sala.entregaNome} arquivo={arquivoBase} />)}
+          {(() => {
+            let contador = 0;
+            return msgs.map((m) => {
+              const indice = m.agent !== "voce" && m.agent !== "sistema" ? contador++ : null;
+              return <Mensagem key={m.id} m={m} entregaNome={sala.entregaNome} arquivo={arquivoBase} indice={indice} />;
+            });
+          })()}
           {falando && <Digitando id={falando} alvos={alvos} />}
 
           {fase === "aprovacao" && (
